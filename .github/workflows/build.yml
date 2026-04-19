@@ -8,10 +8,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    timeout-minutes: 90
+    timeout-minutes: 120
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install system dependencies
+      - name: Install system deps
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -30,7 +30,7 @@ jobs:
 
       - name: Install Buildozer
         run: |
-          pip install --upgrade pip
+          pip install --upgrade pip wheel
           pip install buildozer cython==0.29.37
 
       - name: Cache Buildozer
@@ -39,12 +39,12 @@ jobs:
           path: ~/.buildozer
           key: buildozer-${{ hashFiles('buildozer.spec') }}
 
-      - name: Build APK
+      - name: Build APK (DEBUG)
         run: |
-          buildozer android debug
+          buildozer -v android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HealthMate-apk
+          name: HealthMate-APK
           path: bin/*.apk
