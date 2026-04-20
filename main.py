@@ -1,15 +1,18 @@
 import json
 import os
+import threading
+import urllib.request
+import urllib.parse
 from datetime import datetime, date
+
 from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition, FadeTransition
+from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
-from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.switch import Switch
 from kivy.animation import Animation
 from kivy.core.window import Window
@@ -17,505 +20,166 @@ from kivy.uix.image import Image
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.utils import get_color_from_hex
 from kivy.clock import Clock
-from kivy.properties import StringProperty, BooleanProperty, ListProperty, ObjectProperty
+from kivy.properties import StringProperty, BooleanProperty, ListProperty
 from kivy.storage.jsonstore import JsonStore
-import urllib.request
-import urllib.parse
-import threading
+from kivy.graphics import Color, RoundedRectangle, Rectangle
+from kivy.metrics import dp
 
-Window.size = (400, 700)
+# Только на десктопе задаём размер
+import platform
+if platform.system() in ('Windows', 'Darwin', 'Linux'):
+    Window.size = (400, 700)
 
-# ─────────────────────────────────────────────
+# ──────────────────────────────────────────────────
 #  ДАННЫЕ: Диета №15 на 30 дней
-# ─────────────────────────────────────────────
+# ──────────────────────────────────────────────────
 DIET_PLAN = [
-    # День 1
-    {
-        "breakfast": "Овсяная каша на воде с яблоком и корицей\nЧай без сахара",
-        "lunch":     "Куриный суп с овощами\nХлеб цельнозерновой",
-        "snack":     "Кефир 1% — 200 мл\nГруша",
-        "dinner":    "Запечённая куриная грудка с брокколи\nГречка отварная",
-    },
-    # День 2
-    {
-        "breakfast": "Творог 5% с мёдом и орехами\nТравяной чай",
-        "lunch":     "Суп-пюре из тыквы\nОтварная индейка 150 г",
-        "snack":     "Яблоко запечённое\nМиндаль 20 г",
-        "dinner":    "Рыба на пару (хек/минтай)\nОтварной рис бурый",
-    },
-    # День 3
-    {
-        "breakfast": "Яйца всмятку 2 шт\nОгурец, помидор\nЦельнозерновой тост",
-        "lunch":     "Борщ без зажарки\nКусочек куриной грудки",
-        "snack":     "Смузи: банан + кефир",
-        "dinner":    "Тушёные овощи с индейкой\nПшено отварное",
-    },
-    # День 4
-    {
-        "breakfast": "Манная каша на молоке 1.5%\nЯгоды замороженные",
-        "lunch":     "Щи из свежей капусты\nОтварная говядина нежирная 120 г",
-        "snack":     "Кефир\nЦельнозерновой хлебец",
-        "dinner":    "Запечённый минтай с лимоном\nОтварная гречка",
-    },
-    # День 5
-    {
-        "breakfast": "Гречневая каша молочная\nЧай с лимоном",
-        "lunch":     "Уха из горбуши\nОвощной салат с оливковым маслом",
-        "snack":     "Творог 0% с ягодами",
-        "dinner":    "Паровые котлеты из куриного фарша\nОтварная цветная капуста",
-    },
-    # День 6
-    {
-        "breakfast": "Омлет 2 яйца + молоко\nОгурец\nЧай",
-        "lunch":     "Рисовый суп с курицей\nЦельнозерновой хлеб",
-        "snack":     "Банан\nГрецкий орех 15 г",
-        "dinner":    "Запечённое куриное филе с перцем\nОтварной картофель 150 г",
-    },
-    # День 7
-    {
-        "breakfast": "Пшённая каша с тыквой\nКомпот без сахара",
-        "lunch":     "Овощной суп-минестроне\nОтварная телятина 120 г",
-        "snack":     "Йогурт натуральный\nКивиягода",
-        "dinner":    "Треска запечённая в фольге\nОтварной зелёный горошек",
-    },
-    # День 8
-    {
-        "breakfast": "Мюсли без сахара + молоко\nЗелёный чай",
-        "lunch":     "Гороховый суп без копчёностей\nКуриная котлета паровая",
-        "snack":     "Кефир 200 мл\nХлебец с отрубями",
-        "dinner":    "Тушёная капуста с куриным филе\nОтварная гречка",
-    },
-    # День 9
-    {
-        "breakfast": "Творожная запеканка без сахара\nЧай",
-        "lunch":     "Куриный бульон с вермишелью\nОвощной салат",
-        "snack":     "Яблоко\nМиндаль 20 г",
-        "dinner":    "Запечённый лосось\nОтварной рис",
-    },
-    # День 10
-    {
-        "breakfast": "Геркулесовая каша с изюмом\nТравяной чай",
-        "lunch":     "Суп из чечевицы\nОтварная индейка",
-        "snack":     "Смузи: шпинат + яблоко + кефир",
-        "dinner":    "Паровые рыбные котлеты\nОтварная брокколи",
-    },
-    # День 11
-    {
-        "breakfast": "Яичница на оливковом масле\nПомидор\nЦельнозерновой тост",
-        "lunch":     "Суп с фрикадельками (куриный фарш)\nОтварной картофель",
-        "snack":     "Творог с мёдом",
-        "dinner":    "Тушёная говядина с овощами\nОтварная гречка",
-    },
-    # День 12
-    {
-        "breakfast": "Рисовая каша на молоке\nЧай с молоком",
-        "lunch":     "Окрошка (кефирная)\nОтварная куриная грудка",
-        "snack":     "Грейпфрут\nКешью 15 г",
-        "dinner":    "Запечённая треска с овощами\nОтварной рис бурый",
-    },
-    # День 13
-    {
-        "breakfast": "Овсянка с бананом и мёдом\nКофе с молоком",
-        "lunch":     "Суп-лапша куриная\nОвощной салат",
-        "snack":     "Кефир\nХлебец",
-        "dinner":    "Куриное филе тушёное с грибами\nОтварное пшено",
-    },
-    # День 14
-    {
-        "breakfast": "Гречка отварная + яйцо\nЧай",
-        "lunch":     "Рассольник без зажарки\nОтварная говядина",
-        "snack":     "Йогурт натуральный\nГруша",
-        "dinner":    "Паровой хек с лимоном\nОтварная цветная капуста",
-    },
-    # День 15
-    {
-        "breakfast": "Творог 5% + банан + корица\nТравяной чай",
-        "lunch":     "Суп из кабачков\nКуриная котлета паровая",
-        "snack":     "Яблоко\nФундук 20 г",
-        "dinner":    "Запечённая индейка с перцем\nОтварной картофель",
-    },
-    # День 16
-    {
-        "breakfast": "Пшённая каша с молоком\nКомпот",
-        "lunch":     "Борщ (постный)\nОтварная куриная грудка",
-        "snack":     "Смузи: клубника + кефир",
-        "dinner":    "Запечённый минтай\nОтварная гречка",
-    },
-    # День 17
-    {
-        "breakfast": "Омлет с овощами (болгарский перец, помидор)\nЧай",
-        "lunch":     "Уха из трески\nЦельнозерновой хлеб",
-        "snack":     "Кефир\nХлебец с отрубями",
-        "dinner":    "Тушёные кабачки с индейкой\nОтварной рис",
-    },
-    # День 18
-    {
-        "breakfast": "Геркулес с черникой\nЗелёный чай",
-        "lunch":     "Суп гречневый с курицей\nОвощной салат",
-        "snack":     "Банан\nМиндаль 15 г",
-        "dinner":    "Паровые котлеты говяжьи\nОтварная брокколи",
-    },
-    # День 19
-    {
-        "breakfast": "Яйца всмятку 2 шт\nОгурец\nЦельнозерновой тост",
-        "lunch":     "Суп-пюре из горошка\nОтварная индейка",
-        "snack":     "Творог 0% с кивиягодой",
-        "dinner":    "Запечённый лосось с зеленью\nОтварной картофель",
-    },
-    # День 20
-    {
-        "breakfast": "Манная каша на молоке\nЧай с лимоном",
-        "lunch":     "Щи с грибами\nОтварная куриная грудка",
-        "snack":     "Кефир\nГруша",
-        "dinner":    "Тушёная рыба с морковью\nОтварное пшено",
-    },
-    # День 21
-    {
-        "breakfast": "Гречка молочная\nТравяной чай",
-        "lunch":     "Рисовый суп с курицей\nЦельнозерновой хлеб",
-        "snack":     "Смузи: шпинат + банан + кефир",
-        "dinner":    "Куриное филе запечённое\nОтварная гречка",
-    },
-    # День 22
-    {
-        "breakfast": "Творожная запеканка\nЧай",
-        "lunch":     "Суп с чечевицей\nПаровая котлета",
-        "snack":     "Яблоко запечённое\nОрехи 20 г",
-        "dinner":    "Треска на пару с лимоном\nОтварной рис бурый",
-    },
-    # День 23
-    {
-        "breakfast": "Овсяная каша с яблоком\nКофе с молоком",
-        "lunch":     "Борщ с телятиной\nЦельнозерновой хлеб",
-        "snack":     "Йогурт натуральный\nКивиягода",
-        "dinner":    "Запечённая индейка с брокколи\nОтварной картофель",
-    },
-    # День 24
-    {
-        "breakfast": "Мюсли + молоко\nЗелёный чай",
-        "lunch":     "Куриный суп с рисом\nОвощной салат",
-        "snack":     "Кефир\nХлебец",
-        "dinner":    "Паровой минтай\nОтварная цветная капуста",
-    },
-    # День 25
-    {
-        "breakfast": "Яичница с помидором\nЦельнозерновой тост\nЧай",
-        "lunch":     "Суп с фрикадельками\nОтварной картофель",
-        "snack":     "Смузи: малина + творог",
-        "dinner":    "Тушёная говядина с тушёными овощами\nОтварная гречка",
-    },
-    # День 26
-    {
-        "breakfast": "Пшённая каша с тыквой и мёдом\nТравяной чай",
-        "lunch":     "Гороховый суп\nОтварная курица",
-        "snack":     "Банан\nМиндаль 20 г",
-        "dinner":    "Запечённый хек с морковью\nОтварной рис",
-    },
-    # День 27
-    {
-        "breakfast": "Геркулес с изюмом и орехами\nЧай с молоком",
-        "lunch":     "Суп-лапша с индейкой\nОвощной салат",
-        "snack":     "Творог с мёдом\nГруша",
-        "dinner":    "Куриное филе тушёное с кабачком\nОтварная гречка",
-    },
-    # День 28
-    {
-        "breakfast": "Омлет 2 яйца + зелень\nОгурец\nЧай",
-        "lunch":     "Рассольник\nОтварная телятина",
-        "snack":     "Кефир\nЦельнозерновой хлебец",
-        "dinner":    "Лосось запечённый\nОтварная брокколи",
-    },
-    # День 29
-    {
-        "breakfast": "Гречка с яйцом вкрутую\nЧай с лимоном",
-        "lunch":     "Суп из кабачков с рисом\nПаровая котлета",
-        "snack":     "Смузи: яблоко + кефир + корица",
-        "dinner":    "Запечённая индейка\nОтварное пшено",
-    },
-    # День 30
-    {
-        "breakfast": "Творог 5% с ягодами\nМёд\nТравяной чай",
-        "lunch":     "Борщ с говядиной\nЦельнозерновой хлеб",
-        "snack":     "Йогурт натуральный\nКивиягода",
-        "dinner":    "Рыба на пару\nОтварная гречка\nОвощной салат",
-    },
+    {"breakfast":"Овсяная каша с яблоком","lunch":"Куриный суп с овощами","snack":"Кефир + груша","dinner":"Куриная грудка + брокколи"},
+    {"breakfast":"Творог с медом и орехами","lunch":"Суп-пюре из тыквы + индейка","snack":"Запеченное яблоко","dinner":"Рыба на пару + бурый рис"},
+    {"breakfast":"Яйца всмятку + тост","lunch":"Борщ без зажарки + курица","snack":"Смузи банан+кефир","dinner":"Тушеные овощи + индейка"},
+    {"breakfast":"Манная каша + ягоды","lunch":"Щи из капусты + говядина","snack":"Кефир + хлебец","dinner":"Запеченный минтай + гречка"},
+    {"breakfast":"Гречневая каша молочная","lunch":"Уха из горбуши","snack":"Творог с ягодами","dinner":"Паровые котлеты + цветная капуста"},
+    {"breakfast":"Омлет 2 яйца + огурец","lunch":"Рисовый суп с курицей","snack":"Банан + орехи","dinner":"Куриное филе + картофель"},
+    {"breakfast":"Пшённая каша с тыквой","lunch":"Суп-минестроне + телятина","snack":"Натуральный йогурт","dinner":"Треска запеченная + горошек"},
+    {"breakfast":"Мюсли без сахара + молоко","lunch":"Гороховый суп + котлета","snack":"Кефир + хлебец","dinner":"Тушеная капуста + куриное филе"},
+    {"breakfast":"Творожная запеканка","lunch":"Куриный бульон + вермишель","snack":"Яблоко + миндаль","dinner":"Запеченный лосось + рис"},
+    {"breakfast":"Геркулес с изюмом","lunch":"Суп из чечевицы + индейка","snack":"Смузи шпинат+яблоко","dinner":"Паровые рыбные котлеты + брокколи"},
+    {"breakfast":"Яичница + помидор + тост","lunch":"Суп с фрикадельками","snack":"Творог с медом","dinner":"Тушеная говядина + гречка"},
+    {"breakfast":"Рисовая каша молочная","lunch":"Окрошка на кефире","snack":"Грейпфрут + кешью","dinner":"Запеченная треска + бурый рис"},
+    {"breakfast":"Овсянка с бананом","lunch":"Суп-лапша куриная","snack":"Кефир + хлебец","dinner":"Куриное филе с грибами + пшено"},
+    {"breakfast":"Гречка + яйцо","lunch":"Рассольник + говядина","snack":"Натуральный йогурт + груша","dinner":"Паровой хек + цветная капуста"},
+    {"breakfast":"Творог + банан + корица","lunch":"Суп из кабачков + котлета","snack":"Яблоко + фундук","dinner":"Запеченная индейка + картофель"},
+    {"breakfast":"Пшённая каша молочная","lunch":"Борщ постный + курица","snack":"Смузи клубника+кефир","dinner":"Запеченный минтай + гречка"},
+    {"breakfast":"Омлет с овощами","lunch":"Уха из трески","snack":"Кефир + хлебец","dinner":"Тушеные кабачки + индейка + рис"},
+    {"breakfast":"Геркулес с черникой","lunch":"Суп гречневый с курицей","snack":"Банан + миндаль","dinner":"Паровые котлеты говяжьи + брокколи"},
+    {"breakfast":"Яйца всмятку + тост","lunch":"Суп-пюре из горошка","snack":"Творог с киви","dinner":"Запеченный лосось + картофель"},
+    {"breakfast":"Манная каша молочная","lunch":"Щи с грибами + курица","snack":"Кефир + груша","dinner":"Тушеная рыба с морковью + пшено"},
+    {"breakfast":"Гречка молочная","lunch":"Рисовый суп с курицей","snack":"Смузи шпинат+банан","dinner":"Куриное филе запеченное + гречка"},
+    {"breakfast":"Творожная запеканка","lunch":"Суп с чечевицей + котлета","snack":"Запеченное яблоко + орехи","dinner":"Треска на пару + бурый рис"},
+    {"breakfast":"Овсянка с яблоком","lunch":"Борщ с телятиной","snack":"Натуральный йогурт + киви","dinner":"Запеченная индейка + брокколи"},
+    {"breakfast":"Мюсли + молоко","lunch":"Куриный суп с рисом","snack":"Кефир + хлебец","dinner":"Паровой минтай + цветная капуста"},
+    {"breakfast":"Яичница + помидор + тост","lunch":"Суп с фрикадельками","snack":"Смузи малина+творог","dinner":"Тушеная говядина с овощами + гречка"},
+    {"breakfast":"Пшённая каша с тыквой","lunch":"Гороховый суп + курица","snack":"Банан + миндаль","dinner":"Запеченный хек с морковью + рис"},
+    {"breakfast":"Геркулес с изюмом","lunch":"Суп-лапша с индейкой","snack":"Творог с медом + груша","dinner":"Куриное филе с кабачком + гречка"},
+    {"breakfast":"Омлет + зелень + огурец","lunch":"Рассольник + телятина","snack":"Кефир + хлебец","dinner":"Лосось запеченный + брокколи"},
+    {"breakfast":"Гречка + яйцо вкрутую","lunch":"Суп из кабачков с рисом + котлета","snack":"Смузи яблоко+кефир","dinner":"Запеченная индейка + пшено"},
+    {"breakfast":"Творог с ягодами","lunch":"Борщ с говядиной","snack":"Натуральный йогурт + киви","dinner":"Рыба на пару + гречка + салат"},
 ]
 
-# ─────────────────────────────────────────────
-#  ДАННЫЕ: ЛФК на 30 дней (для пострадавших, реабилитация)
-# ─────────────────────────────────────────────
+# ──────────────────────────────────────────────────
+#  ДАННЫЕ: ЛФК на 30 дней
+# ──────────────────────────────────────────────────
 LFK_PLAN = [
-    {"title": "Дыхательная гимнастика", "exercises": [
-        "Диафрагмальное дыхание — 10 мин",
-        "Медленные вдохи через нос — 15 раз",
-        "Выдох через губы трубочкой — 15 раз",
-        "Лёжа: подъём рук на вдохе — 10 раз",
-    ]},
-    {"title": "Суставная разминка", "exercises": [
-        "Вращение кистями — 10 раз в каждую сторону",
-        "Вращение локтями — 10 раз",
-        "Вращение плечами — 10 раз",
-        "Наклоны головы вперёд-назад — 8 раз",
-    ]},
-    {"title": "Упражнения лёжа", "exercises": [
-        "Сжимание-разжимание пальцев рук — 15 раз",
-        "Подъём прямой ноги лёжа — 10 раз каждая",
-        "Велосипед лёжа — 30 сек",
-        "Мост (ягодицы вверх) — 10 раз",
-    ]},
-    {"title": "Упражнения сидя", "exercises": [
-        "Подъём на носки сидя — 15 раз",
-        "Разгибание ноги в колене — 10 раз каждая",
-        "Наклоны туловища в стороны — 8 раз",
-        "Повороты корпуса — 8 раз",
-    ]},
-    {"title": "Лёгкая растяжка", "exercises": [
-        "Растяжка плечевого пояса — 2 мин",
-        "Наклон к ногам сидя — 10 раз",
-        "Растяжка икр у стены — 1 мин каждая",
-        "Кошка-корова (спина) — 10 раз",
-    ]},
-    {"title": "Дыхание + релаксация", "exercises": [
-        "Глубокое брюшное дыхание — 5 мин",
-        "Прогрессивная мышечная релаксация — 10 мин",
-        "Медитация лёжа — 5 мин",
-    ]},
-    {"title": "Ходьба и равновесие", "exercises": [
-        "Медленная ходьба дома — 10 мин",
-        "Стойка на одной ноге — 30 сек каждая",
-        "Ходьба пятками — 2 мин",
-        "Ходьба на носках — 2 мин",
-    ]},
-    {"title": "Упражнения для рук", "exercises": [
-        "Сжимание мячика — 15 раз",
-        "Подъём рук вперёд с гантелью 0.5 кг — 10 раз",
-        "Разведение рук в стороны — 10 раз",
-        "Растяжка пальцев — 2 мин",
-    ]},
-    {"title": "Укрепление спины", "exercises": [
-        "Лодочка лёжа на животе — 10 раз",
-        "Кошка-корова — 10 раз",
-        "Боковые наклоны стоя — 10 раз",
-        "Медленные повороты шеи — 8 раз",
-    ]},
-    {"title": "Упражнения для ног", "exercises": [
-        "Подъём ног лёжа — 10 раз каждая",
-        "Сгибание-разгибание колен стоя — 15 раз",
-        "Отведение ноги в сторону — 10 раз",
-        "Тяга пятки к ягодице стоя — 10 раз",
-    ]},
-    {"title": "Координация", "exercises": [
-        "Ходьба по линии — 2 мин",
-        "Перешагивание предметов — 5 мин",
-        "Марш на месте — 3 мин",
-        "Рисование ногой восьмёрок — 10 раз",
-    ]},
-    {"title": "Укрепление пресса (мягкое)", "exercises": [
-        "Подъём головы лёжа — 10 раз",
-        "Втягивание живота — 10 раз по 5 сек",
-        "Подъём ног согнутых — 10 раз",
-        "Боковые скручивания — 8 раз",
-    ]},
-    {"title": "Дыхательная + суставная", "exercises": [
-        "Полное дыхание (3 фазы) — 5 мин",
-        "Вращение голеностопом — 10 раз",
-        "Вращение тазом стоя — 10 раз",
-        "Потягивание всего тела — 2 мин",
-    ]},
-    {"title": "Активный день", "exercises": [
-        "Ходьба на свежем воздухе — 20 мин",
-        "Приседания с опорой — 10 раз",
-        "Подъём на носки стоя — 15 раз",
-        "Растяжка всего тела — 5 мин",
-    ]},
-    {"title": "Восстановление", "exercises": [
-        "Массаж кистей — 5 мин",
-        "Тёплая ванна для ног — 10 мин",
-        "Глубокое дыхание — 5 мин",
-        "Лёгкая растяжка перед сном — 5 мин",
-    ]},
-    {"title": "Упражнения для равновесия", "exercises": [
-        "Стойка у стены на носках — 1 мин",
-        "Перекаты с пятки на носок — 15 раз",
-        "Лёгкое покачивание стоя — 2 мин",
-        "Ходьба с изменением направления — 5 мин",
-    ]},
-    {"title": "Комплекс для плеч", "exercises": [
-        "Пожимание плечами — 15 раз",
-        "Вращение плечами — 10 раз",
-        "Разведение лопаток — 10 раз",
-        "Наклоны головы с растяжкой — 8 раз",
-    ]},
-    {"title": "Лёжа + дыхание", "exercises": [
-        "Подъём таза (мост) — 10 раз",
-        "Велосипед — 30 сек",
-        "Дыхательные упражнения — 5 мин",
-        "Расслабление тела поочерёдно — 5 мин",
-    ]},
-    {"title": "Мягкая нагрузка", "exercises": [
-        "Ходьба по комнате — 15 мин",
-        "Подъём на носки — 15 раз",
-        "Марш с высоким подъёмом колен — 2 мин",
-        "Растяжка икр — 2 мин",
-    ]},
-    {"title": "Укрепление кора", "exercises": [
-        "Планка на локтях — 20 сек",
-        "Боковая планка — 15 сек каждая",
-        "Подъём противоположных руки/ноги — 10 раз",
-        "Скручивания мягкие — 10 раз",
-    ]},
-    {"title": "День растяжки", "exercises": [
-        "Растяжка всего тела лёжа — 5 мин",
-        "Растяжка бёдер — 2 мин каждое",
-        "Растяжка плеч — 2 мин",
-        "Йога: поза ребёнка — 3 мин",
-    ]},
-    {"title": "Активация", "exercises": [
-        "Прыжки на месте мягкие — 30 сек",
-        "Приседания — 10 раз",
-        "Выпады вперёд — 8 раз каждая нога",
-        "Ходьба на месте — 5 мин",
-    ]},
-    {"title": "Суставная + дыхание", "exercises": [
-        "Вращение всех суставов поочерёдно — 10 мин",
-        "Полное дыхание — 5 мин",
-        "Потягивание — 2 мин",
-    ]},
-    {"title": "Упражнения с сопротивлением", "exercises": [
-        "Эспандер: сгибание руки — 10 раз",
-        "Эспандер: разгибание — 10 раз",
-        "Подъём ноги с эспандером — 10 раз",
-        "Растяжка с эспандером — 2 мин",
-    ]},
-    {"title": "Дыхательная + осанка", "exercises": [
-        "Дыхание у стены (спина ровная) — 5 мин",
-        "Прогиб назад у стены — 10 раз",
-        "Стойка у стены с правильной осанкой — 3 мин",
-        "Растяжка грудного отдела — 2 мин",
-    ]},
-    {"title": "Лёгкий кардио день", "exercises": [
-        "Ходьба — 25 мин",
-        "Подъём-спуск по ступеням — 5 мин",
-        "Растяжка после ходьбы — 5 мин",
-    ]},
-    {"title": "Полное расслабление", "exercises": [
-        "Глубокое дыхание — 10 мин",
-        "Йога: шавасана — 10 мин",
-        "Мягкий самомассаж — 10 мин",
-    ]},
-    {"title": "Укрепление ног", "exercises": [
-        "Приседания у стены — 10 раз",
-        "Шаги в сторону — 15 раз",
-        "Подъём на носки — 20 раз",
-        "Растяжка бёдер стоя — 2 мин каждое",
-    ]},
-    {"title": "Комплекс для рук и плеч", "exercises": [
-        "Отжимания от стены — 10 раз",
-        "Разведение рук с гантелями — 10 раз",
-        "Подъём рук вперёд — 10 раз",
-        "Растяжка плечевого пояса — 3 мин",
-    ]},
-    {"title": "Итоговая тренировка месяца", "exercises": [
-        "Дыхательная разминка — 3 мин",
-        "Суставная гимнастика — 5 мин",
-        "Ходьба — 15 мин",
-        "Упражнения на кор — 5 мин",
-        "Растяжка всего тела — 5 мин",
-        "Релаксация — 5 мин",
-    ]},
+    {"title":"Дыхательная гимнастика","exercises":["Диафрагмальное дыхание — 10 мин","Медленные вдохи через нос — 15 раз","Выдох трубочкой — 15 раз","Подъём рук на вдохе лёжа — 10 раз"]},
+    {"title":"Суставная разминка","exercises":["Вращение кистями — 10 раз","Вращение локтями — 10 раз","Вращение плечами — 10 раз","Наклоны головы — 8 раз"]},
+    {"title":"Упражнения лёжа","exercises":["Сжимание пальцев — 15 раз","Подъём ноги лёжа — 10 раз","Велосипед лёжа — 30 сек","Мост (ягодицы вверх) — 10 раз"]},
+    {"title":"Упражнения сидя","exercises":["Подъём на носки сидя — 15 раз","Разгибание колена — 10 раз","Наклоны туловища — 8 раз","Повороты корпуса — 8 раз"]},
+    {"title":"Лёгкая растяжка","exercises":["Растяжка плеч — 2 мин","Наклон к ногам сидя — 10 раз","Растяжка икр — 1 мин","Кошка-корова — 10 раз"]},
+    {"title":"Дыхание и релаксация","exercises":["Брюшное дыхание — 5 мин","Мышечная релаксация — 10 мин","Медитация лёжа — 5 мин"]},
+    {"title":"Ходьба и равновесие","exercises":["Медленная ходьба — 10 мин","Стойка на одной ноге — 30 сек","Ходьба пятками — 2 мин","Ходьба на носках — 2 мин"]},
+    {"title":"Упражнения для рук","exercises":["Сжимание мячика — 15 раз","Подъём рук вперёд — 10 раз","Разведение рук — 10 раз","Растяжка пальцев — 2 мин"]},
+    {"title":"Укрепление спины","exercises":["Лодочка лёжа — 10 раз","Кошка-корова — 10 раз","Боковые наклоны — 10 раз","Повороты шеи — 8 раз"]},
+    {"title":"Упражнения для ног","exercises":["Подъём ног лёжа — 10 раз","Сгибание колен стоя — 15 раз","Отведение ноги — 10 раз","Тяга пятки к ягодице — 10 раз"]},
+    {"title":"Координация","exercises":["Ходьба по линии — 2 мин","Перешагивание — 5 мин","Марш на месте — 3 мин","Восьмёрки ногой — 10 раз"]},
+    {"title":"Укрепление пресса","exercises":["Подъём головы лёжа — 10 раз","Втягивание живота — 10 раз","Подъём согнутых ног — 10 раз","Боковые скручивания — 8 раз"]},
+    {"title":"Дыхание и суставы","exercises":["Полное дыхание — 5 мин","Вращение голеностопом — 10 раз","Вращение тазом — 10 раз","Потягивание — 2 мин"]},
+    {"title":"Активный день","exercises":["Ходьба на улице — 20 мин","Приседания с опорой — 10 раз","Подъём на носки — 15 раз","Растяжка — 5 мин"]},
+    {"title":"День восстановления","exercises":["Массаж кистей — 5 мин","Тёплая ванна для ног — 10 мин","Глубокое дыхание — 5 мин","Растяжка перед сном — 5 мин"]},
+    {"title":"Равновесие","exercises":["Стойка у стены на носках — 1 мин","Перекаты с пятки на носок — 15 раз","Покачивание стоя — 2 мин","Ходьба с поворотами — 5 мин"]},
+    {"title":"Комплекс для плеч","exercises":["Пожимание плечами — 15 раз","Вращение плечами — 10 раз","Разведение лопаток — 10 раз","Наклоны головы — 8 раз"]},
+    {"title":"Лёжа и дыхание","exercises":["Мост — 10 раз","Велосипед — 30 сек","Дыхательные упражнения — 5 мин","Расслабление тела — 5 мин"]},
+    {"title":"Мягкая нагрузка","exercises":["Ходьба — 15 мин","Подъём на носки — 15 раз","Марш с подъёмом колен — 2 мин","Растяжка икр — 2 мин"]},
+    {"title":"Укрепление кора","exercises":["Планка на локтях — 20 сек","Боковая планка — 15 сек","Рука+нога противоположные — 10 раз","Скручивания мягкие — 10 раз"]},
+    {"title":"День растяжки","exercises":["Растяжка тела лёжа — 5 мин","Растяжка бёдер — 2 мин","Растяжка плеч — 2 мин","Поза ребёнка — 3 мин"]},
+    {"title":"Активация","exercises":["Мягкие прыжки — 30 сек","Приседания — 10 раз","Выпады вперёд — 8 раз","Ходьба на месте — 5 мин"]},
+    {"title":"Суставы и дыхание","exercises":["Вращение суставов — 10 мин","Полное дыхание — 5 мин","Потягивание — 2 мин"]},
+    {"title":"С эспандером","exercises":["Сгибание руки — 10 раз","Разгибание — 10 раз","Подъём ноги — 10 раз","Растяжка — 2 мин"]},
+    {"title":"Осанка и дыхание","exercises":["Дыхание у стены — 5 мин","Прогиб назад — 10 раз","Стойка с ровной спиной — 3 мин","Растяжка груди — 2 мин"]},
+    {"title":"Лёгкое кардио","exercises":["Ходьба — 25 мин","Подъём по ступеням — 5 мин","Растяжка после ходьбы — 5 мин"]},
+    {"title":"Полное расслабление","exercises":["Глубокое дыхание — 10 мин","Шавасана — 10 мин","Самомассаж — 10 мин"]},
+    {"title":"Укрепление ног","exercises":["Приседания у стены — 10 раз","Шаги в сторону — 15 раз","Подъём на носки — 20 раз","Растяжка бёдер — 2 мин"]},
+    {"title":"Руки и плечи","exercises":["Отжимания от стены — 10 раз","Разведение рук — 10 раз","Подъём рук вперёд — 10 раз","Растяжка плеч — 3 мин"]},
+    {"title":"Итоговая тренировка","exercises":["Дыхательная разминка — 3 мин","Суставная гимнастика — 5 мин","Ходьба — 15 мин","Упражнения на кор — 5 мин","Растяжка тела — 5 мин","Релаксация — 5 мин"]},
 ]
 
-# ─────────────────────────────────────────────
-#  НАПОМИНАНИЯ (фиксированные)
-# ─────────────────────────────────────────────
-REMINDERS = [
-    {"time": "08:00", "label": "Завтрак", "icon": "🍳"},
-    {"time": "12:00", "label": "Обед",    "icon": "🥗"},
-    {"time": "16:00", "label": "Полдник", "icon": "🍎"},
-    {"time": "18:00", "label": "Ужин",    "icon": "🍽️"},
-    {"time": "22:00", "label": "Сон",     "icon": "🌙"},
-]
-
-# ─────────────────────────────────────────────
-#  ХРАНИЛИЩЕ НАСТРОЕК
-# ─────────────────────────────────────────────
+# ──────────────────────────────────────────────────
+#  ХРАНИЛИЩЕ
+# ──────────────────────────────────────────────────
 store = JsonStore('healthmate_data.json')
 
 def get_setting(key, default=None):
     try:
         if store.exists('settings'):
-            d = store.get('settings')
-            return d.get(key, default)
+            return store.get('settings').get(key, default)
     except Exception:
         pass
     return default
 
 def set_setting(key, value):
     try:
-        d = {}
-        if store.exists('settings'):
-            d = dict(store.get('settings'))
+        d = dict(store.get('settings')) if store.exists('settings') else {}
         d[key] = value
         store.put('settings', **d)
     except Exception:
         pass
 
-# ─────────────────────────────────────────────
-#  ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДНЯ
-# ─────────────────────────────────────────────
 def get_day_index():
-    """Возвращает индекс дня в цикле 0-29 на основе дня года."""
     return (date.today().timetuple().tm_yday - 1) % 30
 
-# ─────────────────────────────────────────────
-#  ЭКРАНЫ
-# ─────────────────────────────────────────────
-class NavButton(ButtonBehavior, Image):
-    pass
+# ──────────────────────────────────────────────────
+#  POPUP HELPER
+# ──────────────────────────────────────────────────
+def show_popup(title, text, btn_text='OK'):
+    content = BoxLayout(orientation='vertical', padding=dp(14), spacing=dp(10))
+    content.add_widget(Label(
+        text=text, halign='center', valign='middle',
+        color=get_color_from_hex('#FFFFFF'),
+        font_size=dp(14), text_size=(dp(260), None)
+    ))
+    btn = Button(
+        text=btn_text, size_hint_y=None, height=dp(44),
+        background_normal='', background_color=get_color_from_hex('#6BCB77'),
+        color=get_color_from_hex('#FFFFFF'), font_size=dp(15)
+    )
+    content.add_widget(btn)
+    popup = Popup(
+        title=title, content=content,
+        size_hint=(0.85, None), height=dp(200),
+        background_color=get_color_from_hex('#1E2E3E'),
+        title_color=get_color_from_hex('#FFD93D'),
+        separator_color=get_color_from_hex('#6BCB77')
+    )
+    btn.bind(on_release=popup.dismiss)
+    popup.open()
+    return popup
 
+# ──────────────────────────────────────────────────
+#  ЭКРАНЫ
+# ──────────────────────────────────────────────────
 class MainScreen(Screen):
     date_text = StringProperty('')
-
     def on_enter(self):
         self.update_date()
-        Clock.schedule_interval(lambda dt: self.update_date(), 60)
-
     def update_date(self):
         now = datetime.now()
         months = ['января','февраля','марта','апреля','мая','июня',
                   'июля','августа','сентября','октября','ноября','декабря']
         self.date_text = f"{now.day} {months[now.month-1]} {now.year}"
 
-    def on_leave(self):
-        Clock.unschedule(self.update_date)
-
 
 class LoginScreen(Screen):
     def show_unavailable(self):
-        self._show_popup('ℹ️', 'Регистрация и вход\nбудут доступны в следующем обновлении')
-
+        show_popup('Информация', 'Регистрация и вход\nбудут доступны в следующем обновлении')
     def guest_login(self):
         set_setting('is_guest', True)
         self.manager.transition = SlideTransition(direction='left')
         self.manager.current = 'app_screen'
 
-    def _show_popup(self, title, text):
-        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        content.add_widget(Label(text=text, halign='center', color=(0.2,0.2,0.2,1)))
-        btn = Button(text='OK', size_hint_y=None, height=40,
-                     background_color=get_color_from_hex('#6BCB77'))
-        popup = Popup(title=title, content=content, size_hint=(0.8, 0.35))
-        btn.bind(on_release=popup.dismiss)
-        content.add_widget(btn)
-        popup.open()
-
 
 class AppScreen(Screen):
     date_text = StringProperty('')
-
     def on_enter(self):
         self.update_date()
-
     def update_date(self):
         now = datetime.now()
         months = ['января','февраля','марта','апреля','мая','июня',
@@ -525,58 +189,78 @@ class AppScreen(Screen):
     def open_diet_today(self):
         idx = get_day_index()
         day = DIET_PLAN[idx]
-        content = ScrollView()
-        box = BoxLayout(orientation='vertical', spacing=8, padding=12,
+        content = ScrollView(size_hint=(1, 1))
+        box = BoxLayout(orientation='vertical', spacing=dp(10), padding=dp(14),
                         size_hint_y=None)
         box.bind(minimum_height=box.setter('height'))
-        items = [
-            ("🍳 Завтрак", day["breakfast"]),
-            ("🥗 Обед",    day["lunch"]),
-            ("🍎 Полдник", day["snack"]),
-            ("🍽️ Ужин",   day["dinner"]),
+        rows = [
+            ("Завтрак",  day["breakfast"]),
+            ("Обед",     day["lunch"]),
+            ("Полдник",  day["snack"]),
+            ("Ужин",     day["dinner"]),
         ]
-        for title, text in items:
-            box.add_widget(Label(
-                text=f"[b]{title}[/b]\n{text}",
-                markup=True, halign='left', valign='top',
-                color=(0.15,0.15,0.15,1),
-                size_hint_y=None, height=90,
-                text_size=(320, None)
-            ))
+        for lbl, val in rows:
+            item = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(74),
+                             padding=[dp(12), dp(8)], spacing=dp(4))
+            with item.canvas.before:
+                Color(rgba=get_color_from_hex('#1B4D3E'))
+                item._bg = RoundedRectangle(size=item.size, pos=item.pos, radius=[dp(10)])
+            item.bind(size=lambda w,v: setattr(w._bg,'size',v))
+            item.bind(pos=lambda w,v: setattr(w._bg,'pos',v))
+            item.add_widget(Label(text=lbl, font_size=dp(12), bold=True,
+                                  color=get_color_from_hex('#6BCB77'),
+                                  halign='left', text_size=(dp(280), None),
+                                  size_hint_y=None, height=dp(20)))
+            item.add_widget(Label(text=val, font_size=dp(13),
+                                  color=get_color_from_hex('#FFFFFF'),
+                                  halign='left', text_size=(dp(280), None),
+                                  size_hint_y=None, height=dp(38)))
+            box.add_widget(item)
         content.add_widget(box)
-        popup = Popup(
-            title=f'Диета — день {idx+1}',
-            content=content,
-            size_hint=(0.92, 0.75)
-        )
+        close_btn = Button(text='Закрыть', size_hint_y=None, height=dp(44),
+                           background_normal='',
+                           background_color=get_color_from_hex('#6BCB77'))
+        wrap = BoxLayout(orientation='vertical')
+        wrap.add_widget(content)
+        wrap.add_widget(close_btn)
+        popup = Popup(title=f'Диета — день {idx+1}', content=wrap,
+                      size_hint=(0.93, 0.82),
+                      background_color=get_color_from_hex('#1A2535'),
+                      title_color=get_color_from_hex('#FFD93D'),
+                      separator_color=get_color_from_hex('#6BCB77'))
+        close_btn.bind(on_release=popup.dismiss)
         popup.open()
 
     def open_lfk_today(self):
         idx = get_day_index()
         day = LFK_PLAN[idx]
-        content = ScrollView()
-        box = BoxLayout(orientation='vertical', spacing=8, padding=12,
+        content = ScrollView(size_hint=(1, 1))
+        box = BoxLayout(orientation='vertical', spacing=dp(8), padding=dp(14),
                         size_hint_y=None)
         box.bind(minimum_height=box.setter('height'))
-        box.add_widget(Label(
-            text=f"[b]💪 {day['title']}[/b]",
-            markup=True, halign='left', color=(0.15,0.15,0.15,1),
-            size_hint_y=None, height=40
-        ))
+        box.add_widget(Label(text=day['title'], font_size=dp(15), bold=True,
+                             color=get_color_from_hex('#FFD93D'),
+                             halign='left', text_size=(dp(280), None),
+                             size_hint_y=None, height=dp(30)))
         for ex in day['exercises']:
-            box.add_widget(Label(
-                text=f"• {ex}",
-                halign='left', valign='top',
-                color=(0.2,0.2,0.2,1),
-                size_hint_y=None, height=36,
-                text_size=(320, None)
-            ))
+            lbl = Label(text=f"  - {ex}", font_size=dp(13),
+                        color=get_color_from_hex('#FFFFFF'),
+                        halign='left', text_size=(dp(280), None),
+                        size_hint_y=None, height=dp(32))
+            box.add_widget(lbl)
         content.add_widget(box)
-        popup = Popup(
-            title=f'ЛФК — день {idx+1}',
-            content=content,
-            size_hint=(0.92, 0.6)
-        )
+        close_btn = Button(text='Закрыть', size_hint_y=None, height=dp(44),
+                           background_normal='',
+                           background_color=get_color_from_hex('#6BCB77'))
+        wrap = BoxLayout(orientation='vertical')
+        wrap.add_widget(content)
+        wrap.add_widget(close_btn)
+        popup = Popup(title=f'ЛФК — день {idx+1}', content=wrap,
+                      size_hint=(0.93, 0.75),
+                      background_color=get_color_from_hex('#1A2535'),
+                      title_color=get_color_from_hex('#FFD93D'),
+                      separator_color=get_color_from_hex('#6BCB77'))
+        close_btn.bind(on_release=popup.dismiss)
         popup.open()
 
 
@@ -589,49 +273,28 @@ class CalendarScreen(Screen):
             diet = DIET_PLAN[i]
             lfk  = LFK_PLAN[i]
             is_today = (i == today_idx)
+            row = BoxLayout(orientation='horizontal', size_hint_y=None,
+                            height=dp(54), spacing=dp(6), padding=[dp(10), dp(4)])
             bg = get_color_from_hex('#1B4D3E') if is_today else get_color_from_hex('#1E2E3E')
-            row = BoxLayout(
-                orientation='horizontal',
-                size_hint_y=None,
-                height=dp(52),
-                spacing=8,
-                padding=[12, 4]
-            )
             with row.canvas.before:
-                from kivy.graphics import Color as KColor, RoundedRectangle as KRR
-                r, g, b, a = bg
-                KColor(rgba=(r, g, b, a))
-                row._rect = KRR(size=row.size, pos=row.pos, radius=[10])
-            row.bind(size=lambda w, v: setattr(w._rect, 'size', v))
-            row.bind(pos=lambda w, v: setattr(w._rect, 'pos', v))
-            day_label = Label(
-                text=f"{'→ ' if is_today else ''}День {i+1}",
-                font_size='13sp',
-                bold=is_today,
+                Color(rgba=bg)
+                row._bg = RoundedRectangle(size=row.size, pos=row.pos, radius=[dp(8)])
+            row.bind(size=lambda w,v: setattr(w._bg,'size',v))
+            row.bind(pos=lambda w,v: setattr(w._bg,'pos',v))
+            prefix = ">> " if is_today else ""
+            row.add_widget(Label(
+                text=f"{prefix}День {i+1}",
+                font_size=dp(12), bold=is_today,
                 color=get_color_from_hex('#FFD93D' if is_today else '#FFFFFF'),
-                size_hint_x=0.22,
-                halign='left',
-                text_size=(None, None)
-            )
-            diet_label = Label(
-                text=diet['breakfast'].split('\n')[0][:28],
-                font_size='11sp',
-                color=get_color_from_hex('#A8C5DA'),
-                size_hint_x=0.45,
-                halign='left',
-                text_size=(None, None)
-            )
-            lfk_label = Label(
-                text=lfk['title'][:20],
-                font_size='11sp',
-                color=get_color_from_hex('#D8A8F0'),
-                size_hint_x=0.33,
-                halign='right',
-                text_size=(None, None)
-            )
-            row.add_widget(day_label)
-            row.add_widget(diet_label)
-            row.add_widget(lfk_label)
+                size_hint_x=0.22, halign='left', text_size=(dp(80), None)))
+            row.add_widget(Label(
+                text=diet['breakfast'][:26],
+                font_size=dp(11), color=get_color_from_hex('#A8C5DA'),
+                size_hint_x=0.45, halign='left', text_size=(dp(160), None)))
+            row.add_widget(Label(
+                text=lfk['title'][:18],
+                font_size=dp(11), color=get_color_from_hex('#D8A8F0'),
+                size_hint_x=0.33, halign='right', text_size=(dp(110), None)))
             grid.add_widget(row)
 
 
@@ -640,181 +303,132 @@ class ReminderScreen(Screen):
 
 
 class CommunityScreen(Screen):
-    messages = ListProperty([])
-
-    def on_enter(self):
-        if not self.messages:
-            self.messages = [
-                ("Тренер Алина", "Привет! Добро пожаловать в чат 💚"),
-                ("Михаил",       "Уже 2 недели занимаюсь по программе — чувствую себя лучше!"),
-                ("Тренер Алина", "Отлично, Михаил! Продолжай в том же духе 🎯"),
-                ("Светлана",     "Сегодня сделала всё ЛФК расписание. Горжусь собой 🙌"),
-                ("Дмитрий",      "Кто ещё занимается дыхательной гимнастикой утром?"),
-            ]
-
     def send_message(self, text_input):
         text = text_input.text.strip()
-        if text:
-            self.messages.append(("Вы", text))
-            text_input.text = ''
-            self.ids.chat_scroll.scroll_y = 0
+        if not text:
+            return
+        box = self.ids.chat_box
+        msg_row = BoxLayout(orientation='vertical', size_hint_y=None,
+                            height=dp(60), padding=[dp(10), dp(6)], spacing=dp(2))
+        with msg_row.canvas.before:
+            Color(rgba=get_color_from_hex('#1E3A5F'))
+            msg_row._bg = RoundedRectangle(size=msg_row.size, pos=msg_row.pos,
+                                           radius=[dp(10), dp(10), dp(2), dp(10)])
+        msg_row.bind(size=lambda w,v: setattr(w._bg,'size',v))
+        msg_row.bind(pos=lambda w,v: setattr(w._bg,'pos',v))
+        msg_row.add_widget(Label(text='Вы', font_size=dp(11),
+                                 color=get_color_from_hex('#6BCB77'),
+                                 halign='left', text_size=(dp(300), None),
+                                 size_hint_y=None, height=dp(18)))
+        msg_row.add_widget(Label(text=text, font_size=dp(13),
+                                 color=get_color_from_hex('#FFFFFF'),
+                                 halign='left', text_size=(dp(300), None),
+                                 size_hint_y=None, height=dp(26)))
+        box.add_widget(msg_row)
+        text_input.text = ''
+        Clock.schedule_once(lambda dt: setattr(self.ids.chat_scroll, 'scroll_y', 0), 0.1)
 
 
 class WeatherScreen(Screen):
-    city_name   = StringProperty('Алматы')
-    weather_data = ListProperty([])
-    loading      = BooleanProperty(False)
-    error_text   = StringProperty('')
+    loading    = BooleanProperty(False)
+    error_text = StringProperty('')
 
     WEATHER_CODES = {
-        0:'☀️ Ясно', 1:'🌤️ Преим. ясно', 2:'⛅ Переменная облачность',
-        3:'☁️ Пасмурно', 45:'🌫️ Туман', 48:'🌫️ Иней',
-        51:'🌦️ Лёгкая морось', 61:'🌧️ Дождь', 63:'🌧️ Умер. дождь',
-        65:'🌧️ Сильный дождь', 71:'❄️ Снег', 80:'🌦️ Ливень',
-        95:'⛈️ Гроза',
+        0:'Ясно', 1:'Преим. ясно', 2:'Переменная облачность',
+        3:'Пасмурно', 45:'Туман', 48:'Иней',
+        51:'Легкая морось', 61:'Дождь', 63:'Умеренный дождь',
+        65:'Сильный дождь', 71:'Снег', 80:'Ливень', 95:'Гроза',
     }
 
     def fetch_weather(self, city):
-        self.city_name  = city.strip() or 'Алматы'
-        self.loading    = True
+        self.loading = True
         self.error_text = ''
-        self.weather_data = []
-        threading.Thread(target=self._fetch_thread, daemon=True).start()
+        self.ids.weather_cards.clear_widgets()
+        threading.Thread(target=self._fetch_thread, args=(city.strip() or 'Алматы',), daemon=True).start()
 
-    def _fetch_thread(self):
+    def _fetch_thread(self, city_name):
         try:
-            geo_url = (
-                f"https://geocoding-api.open-meteo.com/v1/search"
-                f"?name={urllib.parse.quote(self.city_name)}&count=1&language=ru&format=json"
-            )
+            geo_url = (f"https://geocoding-api.open-meteo.com/v1/search"
+                       f"?name={urllib.parse.quote(city_name)}&count=1&language=ru&format=json")
             with urllib.request.urlopen(geo_url, timeout=10) as r:
                 geo = json.loads(r.read())
             results = geo.get('results', [])
             if not results:
-                Clock.schedule_once(lambda dt: self._set_error('Город не найден'))
+                Clock.schedule_once(lambda dt: setattr(self, 'error_text', 'Город не найден'))
+                Clock.schedule_once(lambda dt: setattr(self, 'loading', False))
                 return
             lat  = results[0]['latitude']
             lon  = results[0]['longitude']
-            name = results[0].get('name', self.city_name)
-            wx_url = (
-                f"https://api.open-meteo.com/v1/forecast"
-                f"?latitude={lat}&longitude={lon}"
-                f"&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum"
-                f"&timezone=auto&forecast_days=2"
-            )
+            name = results[0].get('name', city_name)
+            wx_url = (f"https://api.open-meteo.com/v1/forecast"
+                      f"?latitude={lat}&longitude={lon}"
+                      f"&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum"
+                      f"&timezone=auto&forecast_days=2")
             with urllib.request.urlopen(wx_url, timeout=10) as r:
                 wx = json.loads(r.read())
-            daily  = wx['daily']
-            dates  = daily['time']
-            codes  = daily['weathercode']
-            t_max  = daily['temperature_2m_max']
-            t_min  = daily['temperature_2m_min']
-            precip = daily['precipitation_sum']
+            daily = wx['daily']
             data = []
-            day_names = ['Сегодня', 'Завтра']
             for i in range(2):
-                desc = self.WEATHER_CODES.get(codes[i], '🌡️ Данные получены')
                 data.append({
-                    'day':    day_names[i],
-                    'date':   dates[i],
-                    'desc':   desc,
-                    'tmax':   f"{t_max[i]:.0f}°C",
-                    'tmin':   f"{t_min[i]:.0f}°C",
-                    'precip': f"{precip[i]:.1f} мм",
+                    'day':    'Сегодня' if i == 0 else 'Завтра',
+                    'date':   daily['time'][i],
+                    'desc':   self.WEATHER_CODES.get(daily['weathercode'][i], 'Данные получены'),
+                    'tmax':   f"{daily['temperature_2m_max'][i]:.0f}",
+                    'tmin':   f"{daily['temperature_2m_min'][i]:.0f}",
+                    'precip': f"{daily['precipitation_sum'][i]:.1f}",
                     'city':   name,
                 })
-            Clock.schedule_once(lambda dt: self._set_data(data))
+            Clock.schedule_once(lambda dt: self._build_cards(data))
         except Exception as e:
-            Clock.schedule_once(lambda dt: self._set_error(f'Ошибка: {str(e)[:60]}'))
+            msg = f'Ошибка соединения\n{str(e)[:50]}'
+            Clock.schedule_once(lambda dt: setattr(self, 'error_text', msg))
+            Clock.schedule_once(lambda dt: setattr(self, 'loading', False))
 
-    def _set_data(self, data):
-        self.weather_data = data
+    def _build_cards(self, data):
         self.loading = False
-        self._build_weather_cards(data)
-
-    def _build_weather_cards(self, data):
-        try:
-            cards_box = self.ids.weather_cards
-            cards_box.clear_widgets()
-            for d in data:
-                card = BoxLayout(
-                    orientation='vertical',
-                    size_hint_y=None,
-                    height=dp(160),
-                    padding=[16, 14],
-                    spacing=6
-                )
-                bg_color = get_color_from_hex('#1E3A5F') if d['day'] == 'Сегодня' else get_color_from_hex('#1B4D3E')
-                with card.canvas.before:
-                    from kivy.graphics import Color as KC, RoundedRectangle as KR
-                    r, g, b, a = bg_color
-                    KC(rgba=(r, g, b, a))
-                    card._rect = KR(size=card.size, pos=card.pos, radius=[16])
-                card.bind(size=lambda w,v: setattr(w._rect,'size',v))
-                card.bind(pos=lambda w,v: setattr(w._rect,'pos',v))
-
-                header = Label(
-                    text=f"[b]{d['day']}[/b]  {d['date']}  📍 {d['city']}",
-                    markup=True,
-                    font_size='14sp',
-                    color=get_color_from_hex('#FFD93D'),
-                    halign='left',
-                    text_size=(350, None),
-                    size_hint_y=None,
-                    height=dp(28)
-                )
-                desc = Label(
-                    text=d['desc'],
-                    font_size='24sp',
-                    halign='left',
-                    text_size=(350, None),
-                    size_hint_y=None,
-                    height=dp(40)
-                )
-                temps = Label(
-                    text=f"🌡️  Макс: {d['tmax']}   Мин: {d['tmin']}",
-                    font_size='14sp',
-                    color=get_color_from_hex('#FFFFFF'),
-                    halign='left',
-                    text_size=(350, None),
-                    size_hint_y=None,
-                    height=dp(26)
-                )
-                precip = Label(
-                    text=f"💧 Осадки: {d['precip']}",
-                    font_size='13sp',
-                    color=get_color_from_hex('#A8C5DA'),
-                    halign='left',
-                    text_size=(350, None),
-                    size_hint_y=None,
-                    height=dp(24)
-                )
-                card.add_widget(header)
-                card.add_widget(desc)
-                card.add_widget(temps)
-                card.add_widget(precip)
-                cards_box.add_widget(card)
-        except Exception:
-            pass
-
-    def _set_error(self, msg):
-        self.error_text = msg
-        self.loading = False
+        box = self.ids.weather_cards
+        box.clear_widgets()
+        colors = ['#1E3A5F', '#1B4D3E']
+        for i, d in enumerate(data):
+            card = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(150),
+                             padding=[dp(16), dp(12)], spacing=dp(6))
+            with card.canvas.before:
+                Color(rgba=get_color_from_hex(colors[i]))
+                card._bg = RoundedRectangle(size=card.size, pos=card.pos, radius=[dp(14)])
+            card.bind(size=lambda w,v: setattr(w._bg,'size',v))
+            card.bind(pos=lambda w,v: setattr(w._bg,'pos',v))
+            card.add_widget(Label(
+                text=f"{d['day']}  {d['date']}  | {d['city']}",
+                font_size=dp(13), bold=True, color=get_color_from_hex('#FFD93D'),
+                halign='left', text_size=(dp(340), None), size_hint_y=None, height=dp(24)))
+            card.add_widget(Label(
+                text=d['desc'], font_size=dp(18), bold=True,
+                color=get_color_from_hex('#FFFFFF'),
+                halign='left', text_size=(dp(340), None), size_hint_y=None, height=dp(34)))
+            card.add_widget(Label(
+                text=f"Макс: {d['tmax']}C  |  Мин: {d['tmin']}C",
+                font_size=dp(14), color=get_color_from_hex('#FFFFFF'),
+                halign='left', text_size=(dp(340), None), size_hint_y=None, height=dp(24)))
+            card.add_widget(Label(
+                text=f"Осадки: {d['precip']} мм",
+                font_size=dp(12), color=get_color_from_hex('#A8C5DA'),
+                halign='left', text_size=(dp(340), None), size_hint_y=None, height=dp(22)))
+            box.add_widget(card)
 
 
 class SettingsScreen(Screen):
-    dark_mode           = BooleanProperty(False)
-    notif_screen        = BooleanProperty(True)
-    notif_enabled       = BooleanProperty(True)
-    pin_enabled         = BooleanProperty(False)
-    is_guest            = BooleanProperty(True)
+    dark_mode      = BooleanProperty(False)
+    notif_screen   = BooleanProperty(True)
+    notif_enabled  = BooleanProperty(True)
+    pin_enabled    = BooleanProperty(False)
+    is_guest       = BooleanProperty(True)
 
     def on_enter(self):
-        self.dark_mode    = get_setting('dark_mode',    False)
-        self.notif_screen = get_setting('notif_screen', True)
-        self.notif_enabled= get_setting('notif_enabled',True)
-        self.pin_enabled  = get_setting('pin_enabled',  False)
-        self.is_guest     = get_setting('is_guest',     True)
+        self.dark_mode     = get_setting('dark_mode',     False)
+        self.notif_screen  = get_setting('notif_screen',  True)
+        self.notif_enabled = get_setting('notif_enabled', True)
+        self.pin_enabled   = get_setting('pin_enabled',   False)
+        self.is_guest      = get_setting('is_guest',      True)
 
     def toggle_dark(self, value):
         self.dark_mode = value
@@ -829,17 +443,23 @@ class SettingsScreen(Screen):
         set_setting('notif_enabled', value)
 
     def set_pin(self):
-        content = BoxLayout(orientation='vertical', spacing=10, padding=15)
-        inp = TextInput(hint_text='Введите 4-значный PIN',
-                        input_filter='int', multiline=False,
-                        password=True, max_chars=4)
+        content = BoxLayout(orientation='vertical', spacing=dp(10), padding=dp(14))
+        inp = TextInput(hint_text='Введите 4-значный PIN', input_filter='int',
+                        multiline=False, password=True,
+                        background_color=get_color_from_hex('#1E2E3E'),
+                        foreground_color=get_color_from_hex('#FFFFFF'),
+                        hint_text_color=get_color_from_hex('#A8C5DA'),
+                        font_size=dp(16), size_hint_y=None, height=dp(44))
         content.add_widget(inp)
-        btn_row = BoxLayout(spacing=8, size_hint_y=None, height=44)
-        popup = Popup(title='🔒 Установить PIN', content=content, size_hint=(0.8,0.4))
-        ok = Button(text='Сохранить',
+        row = BoxLayout(spacing=dp(8), size_hint_y=None, height=dp(44))
+        popup = Popup(title='Установить PIN', content=content,
+                      size_hint=(0.85, None), height=dp(180),
+                      background_color=get_color_from_hex('#1A2535'),
+                      title_color=get_color_from_hex('#FFD93D'))
+        ok = Button(text='Сохранить', background_normal='',
                     background_color=get_color_from_hex('#6BCB77'))
-        cancel = Button(text='Отмена',
-                        background_color=get_color_from_hex('#cccccc'))
+        cancel = Button(text='Отмена', background_normal='',
+                        background_color=get_color_from_hex('#555'))
         def save(*a):
             if len(inp.text) == 4:
                 set_setting('pin_code', inp.text)
@@ -847,29 +467,31 @@ class SettingsScreen(Screen):
                 self.pin_enabled = True
                 popup.dismiss()
             else:
-                inp.hint_text = 'Нужно 4 цифры!'
+                inp.hint_text = 'Нужно ровно 4 цифры!'
         ok.bind(on_release=save)
         cancel.bind(on_release=popup.dismiss)
-        btn_row.add_widget(cancel)
-        btn_row.add_widget(ok)
-        content.add_widget(btn_row)
+        row.add_widget(cancel)
+        row.add_widget(ok)
+        content.add_widget(row)
         popup.open()
 
     def invite_friends(self):
-        self._popup('ℹ️ Приглашение', 'Приложения нет в открытом доступе')
+        show_popup('Приглашение', 'Приложения нет\nв открытом доступе')
 
     def delete_profile(self):
-        content = BoxLayout(orientation='vertical', spacing=10, padding=12)
-        content.add_widget(Label(
-            text='Вы уверены, что хотите\nудалить профиль?',
-            halign='center', color=(0.2,0.2,0.2,1)
-        ))
-        row = BoxLayout(spacing=8, size_hint_y=None, height=44)
-        popup = Popup(title='⚠️ Удаление', content=content, size_hint=(0.8,0.38))
-        yes = Button(text='Да, удалить',
+        content = BoxLayout(orientation='vertical', spacing=dp(10), padding=dp(14))
+        content.add_widget(Label(text='Вы уверены, что хотите\nудалить профиль?',
+                                 halign='center', color=get_color_from_hex('#FFFFFF'),
+                                 font_size=dp(14)))
+        row = BoxLayout(spacing=dp(8), size_hint_y=None, height=dp(44))
+        popup = Popup(title='Удаление профиля', content=content,
+                      size_hint=(0.85, None), height=dp(180),
+                      background_color=get_color_from_hex('#1A2535'),
+                      title_color=get_color_from_hex('#FFD93D'))
+        yes = Button(text='Удалить', background_normal='',
                      background_color=get_color_from_hex('#E74C3C'))
-        no  = Button(text='Отмена',
-                     background_color=get_color_from_hex('#95a5a6'))
+        no  = Button(text='Отмена', background_normal='',
+                     background_color=get_color_from_hex('#555'))
         def confirm(*a):
             try:
                 store.delete('settings')
@@ -884,24 +506,14 @@ class SettingsScreen(Screen):
         content.add_widget(row)
         popup.open()
 
-    def _popup(self, title, text):
-        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        content.add_widget(Label(text=text, halign='center', color=(0.2,0.2,0.2,1)))
-        btn = Button(text='OK', size_hint_y=None, height=40,
-                     background_color=get_color_from_hex('#6BCB77'))
-        popup = Popup(title=title, content=content, size_hint=(0.8, 0.35))
-        btn.bind(on_release=popup.dismiss)
-        content.add_widget(btn)
-        popup.open()
-
     def go_back(self):
         self.manager.transition = SlideTransition(direction='right')
         self.manager.current = 'app_screen'
 
 
-# ─────────────────────────────────────────────
-#  ПРИЛОЖЕНИЕ
-# ─────────────────────────────────────────────
+# ──────────────────────────────────────────────────
+#  APP
+# ──────────────────────────────────────────────────
 class HealthMateApp(App):
     def build(self):
         self.title = 'HealthMate'
