@@ -18,34 +18,6 @@
             pos: self.pos
 
 # ════════════════════════════════════════
-#  ПЕРЕИСПОЛЬЗУЕМЫЕ ВИДЖЕТЫ
-# ════════════════════════════════════════
-
-# Карточка-кнопка в нижней навигации
-<NavBtn@Button>:
-    nav_label: ''
-    background_normal: ''
-    background_color: 0, 0, 0, 0
-    color: get_color_from_hex('#A8C5DA')
-    font_size: dp(13)
-    bold: True
-
-# Карточка контента
-<ContentCard@BoxLayout>:
-    card_color: get_color_from_hex('#1E2E3E')
-    orientation: 'vertical'
-    padding: dp(14)
-    spacing: dp(6)
-    size_hint_y: None
-    canvas.before:
-        Color:
-            rgba: root.card_color
-        RoundedRectangle:
-            size: self.size
-            pos: self.pos
-            radius: [dp(14)]
-
-# ════════════════════════════════════════
 #  ГЛАВНЫЙ ЭКРАН (заставка)
 # ════════════════════════════════════════
 <MainScreen>:
@@ -54,7 +26,6 @@
         padding: [dp(30), dp(60), dp(30), dp(40)]
         spacing: dp(20)
 
-        # Логотип
         BoxLayout:
             size_hint: None, None
             size: dp(90), dp(90)
@@ -103,18 +74,11 @@
             height: dp(56)
             pos_hint: {'center_x': 0.5}
             background_normal: ''
-            background_color: 0, 0, 0, 0
+            background_color: get_color_from_hex('#6BCB77')
             color: get_color_from_hex('#FFFFFF')
             font_size: dp(18)
             bold: True
             on_release: root.manager.current = 'login'
-            canvas.before:
-                Color:
-                    rgba: get_color_from_hex('#6BCB77')
-                RoundedRectangle:
-                    size: self.size
-                    pos: self.pos
-                    radius: [dp(28)]
 
         Widget:
 
@@ -154,18 +118,11 @@
             height: dp(54)
             pos_hint: {'center_x': 0.5}
             background_normal: ''
-            background_color: 0, 0, 0, 0
+            background_color: get_color_from_hex('#6BCB77')
             color: get_color_from_hex('#FFFFFF')
             font_size: dp(16)
             bold: True
             on_release: root.show_unavailable()
-            canvas.before:
-                Color:
-                    rgba: get_color_from_hex('#6BCB77')
-                RoundedRectangle:
-                    size: self.size
-                    pos: self.pos
-                    radius: [dp(27)]
 
         Button:
             text: 'Регистрация'
@@ -173,21 +130,14 @@
             height: dp(54)
             pos_hint: {'center_x': 0.5}
             background_normal: ''
-            background_color: 0, 0, 0, 0
+            background_color: get_color_from_hex('#1B4D3E')
             color: get_color_from_hex('#6BCB77')
             font_size: dp(16)
             bold: True
             on_release: root.show_unavailable()
-            canvas.before:
-                Color:
-                    rgba: get_color_from_hex('#1B4D3E')
-                RoundedRectangle:
-                    size: self.size
-                    pos: self.pos
-                    radius: [dp(27)]
 
         Label:
-            text: '— или —'
+            text: '- или -'
             font_size: dp(13)
             color: get_color_from_hex('#A8C5DA')
             halign: 'center'
@@ -200,18 +150,11 @@
             height: dp(54)
             pos_hint: {'center_x': 0.5}
             background_normal: ''
-            background_color: 0, 0, 0, 0
+            background_color: get_color_from_hex('#FFD93D')
             color: get_color_from_hex('#333333')
             font_size: dp(15)
             bold: True
             on_release: root.guest_login()
-            canvas.before:
-                Color:
-                    rgba: get_color_from_hex('#FFD93D')
-                RoundedRectangle:
-                    size: self.size
-                    pos: self.pos
-                    radius: [dp(27)]
 
         Widget:
 
@@ -226,7 +169,7 @@
         BoxLayout:
             size_hint_y: None
             height: dp(62)
-            padding: [dp(16), dp(8)]
+            padding: [dp(14), dp(8)]
             spacing: dp(12)
             canvas.before:
                 Color:
@@ -240,25 +183,16 @@
                 size: dp(42), dp(42)
                 pos_hint: {'center_y': 0.5}
                 background_normal: ''
-                background_color: 0, 0, 0, 0
+                background_color: get_color_from_hex('#6BCB77')
+                color: get_color_from_hex('#FFFFFF')
+                font_size: dp(16)
+                bold: True
+                text: 'Я'
                 on_release: app.root.current = 'settings'
-                canvas.before:
-                    Color:
-                        rgba: get_color_from_hex('#6BCB77')
-                    Ellipse:
-                        size: dp(42), dp(42)
-                        pos: self.pos
-                Label:
-                    text: 'Я'
-                    font_size: dp(18)
-                    bold: True
-                    color: get_color_from_hex('#FFFFFF')
-                    halign: 'center'
-                    center: self.parent.center
 
             BoxLayout:
                 orientation: 'vertical'
-                spacing: dp(2)
+                spacing: dp(1)
                 Label:
                     text: 'HealthMate'
                     font_size: dp(19)
@@ -269,7 +203,7 @@
                     valign: 'bottom'
                 Label:
                     text: root.date_text
-                    font_size: dp(11)
+                    font_size: dp(12)
                     color: get_color_from_hex('#A8C5DA')
                     halign: 'left'
                     text_size: self.size
@@ -282,224 +216,200 @@
                 size_hint_y: None
                 height: self.minimum_height
                 padding: [dp(14), dp(14)]
-                spacing: dp(12)
+                spacing: dp(10)
 
-                # Напоминания
+                # --- Карточка: Напоминания ---
                 Button:
                     size_hint_y: None
-                    height: dp(84)
+                    height: dp(80)
                     background_normal: ''
-                    background_color: 0, 0, 0, 0
+                    background_color: get_color_from_hex('#1E3A5F')
+                    color: get_color_from_hex('#FFFFFF')
                     on_release: app.root.current = 'reminder'
-                    canvas.before:
+                    text: ''
+                    canvas.after:
                         Color:
-                            rgba: get_color_from_hex('#1E3A5F')
-                        RoundedRectangle:
-                            size: self.size
-                            pos: self.pos
-                            radius: [dp(14)]
+                            rgba: 1, 1, 1, 1
+                        # Метка аббревиатуры
                     BoxLayout:
-                        padding: dp(14)
-                        spacing: dp(12)
-                        BoxLayout:
-                            size_hint: None, None
-                            size: dp(46), dp(46)
-                            pos_hint: {'center_y': 0.5}
-                            canvas.before:
-                                Color:
-                                    rgba: get_color_from_hex('#2A4A6F')
-                                Ellipse:
-                                    size: dp(46), dp(46)
-                                    pos: self.pos
-                            Label:
-                                text: 'РЖМ'
-                                font_size: dp(10)
-                                bold: True
-                                color: get_color_from_hex('#A8C5DA')
-                                halign: 'center'
-                                valign: 'middle'
-                        BoxLayout:
-                            orientation: 'vertical'
-                            spacing: dp(4)
-                            Label:
-                                text: 'Напоминания'
-                                font_size: dp(16)
-                                bold: True
-                                color: get_color_from_hex('#FFFFFF')
-                                halign: 'left'
-                                text_size: self.size
-                                valign: 'bottom'
-                            Label:
-                                text: '08:00  12:00  16:00  18:00  22:00'
-                                font_size: dp(12)
-                                color: get_color_from_hex('#A8C5DA')
-                                halign: 'left'
-                                text_size: self.size
-                                valign: 'top'
+                        orientation: 'vertical'
+                        padding: [dp(54), dp(10), dp(14), dp(10)]
+                        spacing: dp(4)
+                        pos: self.parent.pos
+                        size: self.parent.size
+                        Label:
+                            text: 'Напоминания'
+                            font_size: dp(16)
+                            bold: True
+                            color: get_color_from_hex('#FFFFFF')
+                            halign: 'left'
+                            text_size: self.size
+                            valign: 'bottom'
+                        Label:
+                            text: '08:00  12:00  16:00  18:00  22:00'
+                            font_size: dp(12)
+                            color: get_color_from_hex('#A8C5DA')
+                            halign: 'left'
+                            text_size: self.size
+                            valign: 'top'
+                    Label:
+                        text: 'РЖМ'
+                        font_size: dp(11)
+                        bold: True
+                        color: get_color_from_hex('#A8C5DA')
+                        pos: self.parent.x + dp(6), self.parent.y + dp(16)
+                        size: dp(42), dp(42)
+                        halign: 'center'
+                        valign: 'middle'
+                        canvas.before:
+                            Color:
+                                rgba: get_color_from_hex('#2A4A6F')
+                            Ellipse:
+                                pos: self.parent.x + dp(6), self.parent.y + dp(16)
+                                size: dp(42), dp(42)
 
-                # Диетотерапия
+                # --- Карточка: Диетотерапия ---
                 Button:
                     size_hint_y: None
-                    height: dp(84)
+                    height: dp(80)
                     background_normal: ''
-                    background_color: 0, 0, 0, 0
+                    background_color: get_color_from_hex('#1B4D3E')
+                    color: get_color_from_hex('#FFFFFF')
                     on_release: root.open_diet_today()
-                    canvas.before:
-                        Color:
-                            rgba: get_color_from_hex('#1B4D3E')
-                        RoundedRectangle:
-                            size: self.size
-                            pos: self.pos
-                            radius: [dp(14)]
+                    text: ''
                     BoxLayout:
-                        padding: dp(14)
-                        spacing: dp(12)
-                        BoxLayout:
-                            size_hint: None, None
-                            size: dp(46), dp(46)
-                            pos_hint: {'center_y': 0.5}
-                            canvas.before:
-                                Color:
-                                    rgba: get_color_from_hex('#256040')
-                                Ellipse:
-                                    size: dp(46), dp(46)
-                                    pos: self.pos
-                            Label:
-                                text: 'ДТ'
-                                font_size: dp(14)
-                                bold: True
-                                color: get_color_from_hex('#6BCB77')
-                                halign: 'center'
-                                valign: 'middle'
-                        BoxLayout:
-                            orientation: 'vertical'
-                            spacing: dp(4)
-                            Label:
-                                text: 'Диетотерапия'
-                                font_size: dp(16)
-                                bold: True
-                                color: get_color_from_hex('#FFFFFF')
-                                halign: 'left'
-                                text_size: self.size
-                                valign: 'bottom'
-                            Label:
-                                text: f'День {get_day_index()+1} — нажмите чтобы увидеть меню'
-                                font_size: dp(12)
-                                color: get_color_from_hex('#A8C5DA')
-                                halign: 'left'
-                                text_size: self.size
-                                valign: 'top'
+                        orientation: 'vertical'
+                        padding: [dp(54), dp(10), dp(14), dp(10)]
+                        spacing: dp(4)
+                        pos: self.parent.pos
+                        size: self.parent.size
+                        Label:
+                            text: 'Диетотерапия'
+                            font_size: dp(16)
+                            bold: True
+                            color: get_color_from_hex('#FFFFFF')
+                            halign: 'left'
+                            text_size: self.size
+                            valign: 'bottom'
+                        Label:
+                            text: f'День {get_day_index()+1} — нажмите чтобы увидеть меню'
+                            font_size: dp(12)
+                            color: get_color_from_hex('#A8C5DA')
+                            halign: 'left'
+                            text_size: self.size
+                            valign: 'top'
+                    Label:
+                        text: 'ДТ'
+                        font_size: dp(14)
+                        bold: True
+                        color: get_color_from_hex('#6BCB77')
+                        pos: self.parent.x + dp(6), self.parent.y + dp(16)
+                        size: dp(42), dp(42)
+                        halign: 'center'
+                        valign: 'middle'
+                        canvas.before:
+                            Color:
+                                rgba: get_color_from_hex('#256040')
+                            Ellipse:
+                                pos: self.parent.x + dp(6), self.parent.y + dp(16)
+                                size: dp(42), dp(42)
 
-                # ЛФК
+                # --- Карточка: ЛФК ---
                 Button:
                     size_hint_y: None
-                    height: dp(84)
+                    height: dp(80)
                     background_normal: ''
-                    background_color: 0, 0, 0, 0
+                    background_color: get_color_from_hex('#3D1F5C')
+                    color: get_color_from_hex('#FFFFFF')
                     on_release: root.open_lfk_today()
-                    canvas.before:
-                        Color:
-                            rgba: get_color_from_hex('#3D1F5C')
-                        RoundedRectangle:
-                            size: self.size
-                            pos: self.pos
-                            radius: [dp(14)]
+                    text: ''
                     BoxLayout:
-                        padding: dp(14)
-                        spacing: dp(12)
-                        BoxLayout:
-                            size_hint: None, None
-                            size: dp(46), dp(46)
-                            pos_hint: {'center_y': 0.5}
-                            canvas.before:
-                                Color:
-                                    rgba: get_color_from_hex('#52286E')
-                                Ellipse:
-                                    size: dp(46), dp(46)
-                                    pos: self.pos
-                            Label:
-                                text: 'ЛФК'
-                                font_size: dp(12)
-                                bold: True
-                                color: get_color_from_hex('#D8A8F0')
-                                halign: 'center'
-                                valign: 'middle'
-                        BoxLayout:
-                            orientation: 'vertical'
-                            spacing: dp(4)
-                            Label:
-                                text: 'ЛФК'
-                                font_size: dp(16)
-                                bold: True
-                                color: get_color_from_hex('#FFFFFF')
-                                halign: 'left'
-                                text_size: self.size
-                                valign: 'bottom'
-                            Label:
-                                text: f'День {get_day_index()+1} | {LFK_PLAN[get_day_index()]["title"]}'
-                                font_size: dp(12)
-                                color: get_color_from_hex('#A8C5DA')
-                                halign: 'left'
-                                text_size: self.size
-                                valign: 'top'
+                        orientation: 'vertical'
+                        padding: [dp(54), dp(10), dp(14), dp(10)]
+                        spacing: dp(4)
+                        pos: self.parent.pos
+                        size: self.parent.size
+                        Label:
+                            text: 'ЛФК'
+                            font_size: dp(16)
+                            bold: True
+                            color: get_color_from_hex('#FFFFFF')
+                            halign: 'left'
+                            text_size: self.size
+                            valign: 'bottom'
+                        Label:
+                            text: f'День {get_day_index()+1} | {LFK_PLAN[get_day_index()]["title"]}'
+                            font_size: dp(12)
+                            color: get_color_from_hex('#A8C5DA')
+                            halign: 'left'
+                            text_size: self.size
+                            valign: 'top'
+                    Label:
+                        text: 'ЛФК'
+                        font_size: dp(12)
+                        bold: True
+                        color: get_color_from_hex('#D8A8F0')
+                        pos: self.parent.x + dp(6), self.parent.y + dp(16)
+                        size: dp(42), dp(42)
+                        halign: 'center'
+                        valign: 'middle'
+                        canvas.before:
+                            Color:
+                                rgba: get_color_from_hex('#52286E')
+                            Ellipse:
+                                pos: self.parent.x + dp(6), self.parent.y + dp(16)
+                                size: dp(42), dp(42)
 
-                # Календарь
+                # --- Карточка: Календарь ---
                 Button:
                     size_hint_y: None
-                    height: dp(84)
+                    height: dp(80)
                     background_normal: ''
-                    background_color: 0, 0, 0, 0
+                    background_color: get_color_from_hex('#4A2C00')
+                    color: get_color_from_hex('#FFFFFF')
                     on_release: app.root.current = 'calendar'
-                    canvas.before:
-                        Color:
-                            rgba: get_color_from_hex('#4A2C00')
-                        RoundedRectangle:
-                            size: self.size
-                            pos: self.pos
-                            radius: [dp(14)]
+                    text: ''
                     BoxLayout:
-                        padding: dp(14)
-                        spacing: dp(12)
-                        BoxLayout:
-                            size_hint: None, None
-                            size: dp(46), dp(46)
-                            pos_hint: {'center_y': 0.5}
-                            canvas.before:
-                                Color:
-                                    rgba: get_color_from_hex('#5E3800')
-                                Ellipse:
-                                    size: dp(46), dp(46)
-                                    pos: self.pos
-                            Label:
-                                text: 'КАЛ'
-                                font_size: dp(11)
-                                bold: True
-                                color: get_color_from_hex('#FFD93D')
-                                halign: 'center'
-                                valign: 'middle'
-                        BoxLayout:
-                            orientation: 'vertical'
-                            spacing: dp(4)
-                            Label:
-                                text: 'Календарь'
-                                font_size: dp(16)
-                                bold: True
-                                color: get_color_from_hex('#FFFFFF')
-                                halign: 'left'
-                                text_size: self.size
-                                valign: 'bottom'
-                            Label:
-                                text: 'Расписание диеты на 30 дней'
-                                font_size: dp(12)
-                                color: get_color_from_hex('#A8C5DA')
-                                halign: 'left'
-                                text_size: self.size
-                                valign: 'top'
+                        orientation: 'vertical'
+                        padding: [dp(54), dp(10), dp(14), dp(10)]
+                        spacing: dp(4)
+                        pos: self.parent.pos
+                        size: self.parent.size
+                        Label:
+                            text: 'Календарь'
+                            font_size: dp(16)
+                            bold: True
+                            color: get_color_from_hex('#FFFFFF')
+                            halign: 'left'
+                            text_size: self.size
+                            valign: 'bottom'
+                        Label:
+                            text: 'Расписание диеты на 30 дней'
+                            font_size: dp(12)
+                            color: get_color_from_hex('#A8C5DA')
+                            halign: 'left'
+                            text_size: self.size
+                            valign: 'top'
+                    Label:
+                        text: 'КАЛ'
+                        font_size: dp(11)
+                        bold: True
+                        color: get_color_from_hex('#FFD93D')
+                        pos: self.parent.x + dp(6), self.parent.y + dp(16)
+                        size: dp(42), dp(42)
+                        halign: 'center'
+                        valign: 'middle'
+                        canvas.before:
+                            Color:
+                                rgba: get_color_from_hex('#5E3800')
+                            Ellipse:
+                                pos: self.parent.x + dp(6), self.parent.y + dp(16)
+                                size: dp(42), dp(42)
 
         # Нижняя навигация
         BoxLayout:
             size_hint_y: None
-            height: dp(60)
+            height: dp(56)
             canvas.before:
                 Color:
                     rgba: get_color_from_hex('#0F1C2A')
@@ -572,12 +482,12 @@
                     pos: self.pos
             Button:
                 size_hint_x: None
-                width: dp(44)
+                width: dp(50)
                 text: '<'
                 font_size: dp(22)
                 bold: True
                 background_normal: ''
-                background_color: 0, 0, 0, 0
+                background_color: get_color_from_hex('#1B4D3E')
                 color: get_color_from_hex('#6BCB77')
                 on_release: app.root.current = 'app_screen'
             Label:
@@ -605,12 +515,11 @@
                     size_hint_y: None
                     height: dp(30)
 
-                # 08:00 Завтрак
                 BoxLayout:
                     size_hint_y: None
-                    height: dp(72)
-                    spacing: dp(12)
-                    padding: [dp(14), dp(10)]
+                    height: dp(68)
+                    spacing: dp(0)
+                    padding: [dp(14), dp(8)]
                     canvas.before:
                         Color:
                             rgba: get_color_from_hex('#1B4D3E')
@@ -624,8 +533,9 @@
                         bold: True
                         color: get_color_from_hex('#6BCB77')
                         size_hint_x: None
-                        width: dp(80)
+                        width: dp(90)
                         halign: 'center'
+                        valign: 'middle'
                     BoxLayout:
                         orientation: 'vertical'
                         Label:
@@ -635,19 +545,19 @@
                             color: get_color_from_hex('#FFFFFF')
                             halign: 'left'
                             text_size: self.size
+                            valign: 'bottom'
                         Label:
                             text: 'Время приёма пищи'
                             font_size: dp(12)
                             color: get_color_from_hex('#A8C5DA')
                             halign: 'left'
                             text_size: self.size
+                            valign: 'top'
 
-                # 12:00 Обед
                 BoxLayout:
                     size_hint_y: None
-                    height: dp(72)
-                    spacing: dp(12)
-                    padding: [dp(14), dp(10)]
+                    height: dp(68)
+                    padding: [dp(14), dp(8)]
                     canvas.before:
                         Color:
                             rgba: get_color_from_hex('#1E3A5F')
@@ -661,8 +571,9 @@
                         bold: True
                         color: get_color_from_hex('#A8C5DA')
                         size_hint_x: None
-                        width: dp(80)
+                        width: dp(90)
                         halign: 'center'
+                        valign: 'middle'
                     BoxLayout:
                         orientation: 'vertical'
                         Label:
@@ -672,19 +583,19 @@
                             color: get_color_from_hex('#FFFFFF')
                             halign: 'left'
                             text_size: self.size
+                            valign: 'bottom'
                         Label:
                             text: 'Основной приём пищи'
                             font_size: dp(12)
                             color: get_color_from_hex('#A8C5DA')
                             halign: 'left'
                             text_size: self.size
+                            valign: 'top'
 
-                # 16:00 Полдник
                 BoxLayout:
                     size_hint_y: None
-                    height: dp(72)
-                    spacing: dp(12)
-                    padding: [dp(14), dp(10)]
+                    height: dp(68)
+                    padding: [dp(14), dp(8)]
                     canvas.before:
                         Color:
                             rgba: get_color_from_hex('#3D1F5C')
@@ -698,8 +609,9 @@
                         bold: True
                         color: get_color_from_hex('#D8A8F0')
                         size_hint_x: None
-                        width: dp(80)
+                        width: dp(90)
                         halign: 'center'
+                        valign: 'middle'
                     BoxLayout:
                         orientation: 'vertical'
                         Label:
@@ -709,19 +621,19 @@
                             color: get_color_from_hex('#FFFFFF')
                             halign: 'left'
                             text_size: self.size
+                            valign: 'bottom'
                         Label:
                             text: 'Лёгкий перекус'
                             font_size: dp(12)
                             color: get_color_from_hex('#A8C5DA')
                             halign: 'left'
                             text_size: self.size
+                            valign: 'top'
 
-                # 18:00 Ужин
                 BoxLayout:
                     size_hint_y: None
-                    height: dp(72)
-                    spacing: dp(12)
-                    padding: [dp(14), dp(10)]
+                    height: dp(68)
+                    padding: [dp(14), dp(8)]
                     canvas.before:
                         Color:
                             rgba: get_color_from_hex('#4A2C00')
@@ -735,8 +647,9 @@
                         bold: True
                         color: get_color_from_hex('#FFD93D')
                         size_hint_x: None
-                        width: dp(80)
+                        width: dp(90)
                         halign: 'center'
+                        valign: 'middle'
                     BoxLayout:
                         orientation: 'vertical'
                         Label:
@@ -746,19 +659,19 @@
                             color: get_color_from_hex('#FFFFFF')
                             halign: 'left'
                             text_size: self.size
+                            valign: 'bottom'
                         Label:
                             text: 'Лёгкий ужин'
                             font_size: dp(12)
                             color: get_color_from_hex('#A8C5DA')
                             halign: 'left'
                             text_size: self.size
+                            valign: 'top'
 
-                # 22:00 Сон
                 BoxLayout:
                     size_hint_y: None
-                    height: dp(72)
-                    spacing: dp(12)
-                    padding: [dp(14), dp(10)]
+                    height: dp(68)
+                    padding: [dp(14), dp(8)]
                     canvas.before:
                         Color:
                             rgba: get_color_from_hex('#162A3A')
@@ -772,8 +685,9 @@
                         bold: True
                         color: get_color_from_hex('#FFFFFF')
                         size_hint_x: None
-                        width: dp(80)
+                        width: dp(90)
                         halign: 'center'
+                        valign: 'middle'
                     BoxLayout:
                         orientation: 'vertical'
                         Label:
@@ -783,12 +697,14 @@
                             color: get_color_from_hex('#FFFFFF')
                             halign: 'left'
                             text_size: self.size
+                            valign: 'bottom'
                         Label:
                             text: 'Время отдыха и восстановления'
                             font_size: dp(12)
                             color: get_color_from_hex('#A8C5DA')
                             halign: 'left'
                             text_size: self.size
+                            valign: 'top'
 
 # ════════════════════════════════════════
 #  СООБЩЕСТВО
@@ -810,16 +726,16 @@
                     pos: self.pos
             Button:
                 size_hint_x: None
-                width: dp(44)
+                width: dp(50)
                 text: '<'
                 font_size: dp(22)
                 bold: True
                 background_normal: ''
-                background_color: 0, 0, 0, 0
+                background_color: get_color_from_hex('#1B4D3E')
                 color: get_color_from_hex('#6BCB77')
                 on_release: app.root.current = 'app_screen'
             Label:
-                text: 'К успеху! — чат'
+                text: 'К успеху! - чат'
                 font_size: dp(20)
                 bold: True
                 color: get_color_from_hex('#FFD93D')
@@ -843,21 +759,19 @@
                     color: get_color_from_hex('#A8C5DA')
                     halign: 'center'
                     size_hint_y: None
-                    height: dp(26)
+                    height: dp(28)
 
-                # Сообщение 1
                 BoxLayout:
                     size_hint_y: None
-                    height: dp(64)
-                    padding: [dp(12), dp(6)]
-                    spacing: dp(4)
+                    height: dp(66)
+                    padding: [dp(12), dp(8)]
                     canvas.before:
                         Color:
                             rgba: get_color_from_hex('#1B4D3E')
                         RoundedRectangle:
                             size: self.size
                             pos: self.pos
-                            radius: [dp(12), dp(12), dp(12), dp(2)]
+                            radius: [dp(12)]
                     BoxLayout:
                         orientation: 'vertical'
                         Label:
@@ -868,7 +782,7 @@
                             halign: 'left'
                             text_size: self.size
                             size_hint_y: None
-                            height: dp(20)
+                            height: dp(22)
                         Label:
                             text: 'Привет! Добро пожаловать в чат!'
                             font_size: dp(13)
@@ -876,18 +790,17 @@
                             halign: 'left'
                             text_size: self.size
 
-                # Сообщение 2
                 BoxLayout:
                     size_hint_y: None
-                    height: dp(64)
-                    padding: [dp(12), dp(6)]
+                    height: dp(66)
+                    padding: [dp(12), dp(8)]
                     canvas.before:
                         Color:
                             rgba: get_color_from_hex('#1E3A5F')
                         RoundedRectangle:
                             size: self.size
                             pos: self.pos
-                            radius: [dp(12), dp(12), dp(12), dp(2)]
+                            radius: [dp(12)]
                     BoxLayout:
                         orientation: 'vertical'
                         Label:
@@ -898,26 +811,25 @@
                             halign: 'left'
                             text_size: self.size
                             size_hint_y: None
-                            height: dp(20)
+                            height: dp(22)
                         Label:
-                            text: '2 недели по программе — уже лучше!'
+                            text: '2 недели по программе - уже лучше!'
                             font_size: dp(13)
                             color: get_color_from_hex('#FFFFFF')
                             halign: 'left'
                             text_size: self.size
 
-                # Сообщение 3
                 BoxLayout:
                     size_hint_y: None
-                    height: dp(64)
-                    padding: [dp(12), dp(6)]
+                    height: dp(66)
+                    padding: [dp(12), dp(8)]
                     canvas.before:
                         Color:
                             rgba: get_color_from_hex('#3D1F5C')
                         RoundedRectangle:
                             size: self.size
                             pos: self.pos
-                            radius: [dp(12), dp(12), dp(12), dp(2)]
+                            radius: [dp(12)]
                     BoxLayout:
                         orientation: 'vertical'
                         Label:
@@ -928,7 +840,7 @@
                             halign: 'left'
                             text_size: self.size
                             size_hint_y: None
-                            height: dp(20)
+                            height: dp(22)
                         Label:
                             text: 'Сегодня выполнила всё ЛФК!'
                             font_size: dp(13)
@@ -936,7 +848,6 @@
                             halign: 'left'
                             text_size: self.size
 
-        # Поле ввода
         BoxLayout:
             size_hint_y: None
             height: dp(58)
@@ -965,16 +876,9 @@
                 font_size: dp(22)
                 bold: True
                 background_normal: ''
-                background_color: 0, 0, 0, 0
+                background_color: get_color_from_hex('#1B4D3E')
                 color: get_color_from_hex('#FFFFFF')
                 on_release: root.send_message(msg_input)
-                canvas.before:
-                    Color:
-                        rgba: get_color_from_hex('#1B4D3E')
-                    RoundedRectangle:
-                        size: self.size
-                        pos: self.pos
-                        radius: [dp(10)]
 
 # ════════════════════════════════════════
 #  ПОГОДА
@@ -996,12 +900,12 @@
                     pos: self.pos
             Button:
                 size_hint_x: None
-                width: dp(44)
+                width: dp(50)
                 text: '<'
                 font_size: dp(22)
                 bold: True
                 background_normal: ''
-                background_color: 0, 0, 0, 0
+                background_color: get_color_from_hex('#1B4D3E')
                 color: get_color_from_hex('#6BCB77')
                 on_release: app.root.current = 'app_screen'
             Label:
@@ -1013,7 +917,6 @@
                 text_size: self.size
                 valign: 'middle'
 
-        # Строка поиска
         BoxLayout:
             size_hint_y: None
             height: dp(52)
@@ -1043,16 +946,9 @@
                 font_size: dp(14)
                 bold: True
                 background_normal: ''
-                background_color: 0, 0, 0, 0
+                background_color: get_color_from_hex('#6BCB77')
                 color: get_color_from_hex('#FFFFFF')
                 on_release: root.fetch_weather(city_inp.text)
-                canvas.before:
-                    Color:
-                        rgba: get_color_from_hex('#6BCB77')
-                    RoundedRectangle:
-                        size: self.size
-                        pos: self.pos
-                        radius: [dp(10)]
 
         ScrollView:
             BoxLayout:
@@ -1115,12 +1011,12 @@
                     pos: self.pos
             Button:
                 size_hint_x: None
-                width: dp(44)
+                width: dp(50)
                 text: '<'
                 font_size: dp(22)
                 bold: True
                 background_normal: ''
-                background_color: 0, 0, 0, 0
+                background_color: get_color_from_hex('#1B4D3E')
                 color: get_color_from_hex('#6BCB77')
                 on_release: app.root.current = 'app_screen'
             Label:
@@ -1132,11 +1028,10 @@
                 text_size: self.size
                 valign: 'middle'
 
-        # Заголовок колонок
         BoxLayout:
             size_hint_y: None
-            height: dp(30)
-            padding: [dp(14), dp(4)]
+            height: dp(28)
+            padding: [dp(14), dp(2)]
             canvas.before:
                 Color:
                     rgba: get_color_from_hex('#0F1C2A')
@@ -1146,27 +1041,27 @@
             Label:
                 text: 'День'
                 font_size: dp(11)
+                bold: True
                 color: get_color_from_hex('#6BCB77')
                 size_hint_x: 0.22
                 halign: 'left'
                 text_size: self.size
-                bold: True
             Label:
-                text: 'Завтрак (диета №15)'
+                text: 'Завтрак'
                 font_size: dp(11)
+                bold: True
                 color: get_color_from_hex('#6BCB77')
                 size_hint_x: 0.45
                 halign: 'left'
                 text_size: self.size
-                bold: True
             Label:
                 text: 'ЛФК'
                 font_size: dp(11)
+                bold: True
                 color: get_color_from_hex('#6BCB77')
                 size_hint_x: 0.33
                 halign: 'right'
                 text_size: self.size
-                bold: True
 
         ScrollView:
             BoxLayout:
@@ -1197,12 +1092,12 @@
                     pos: self.pos
             Button:
                 size_hint_x: None
-                width: dp(44)
+                width: dp(50)
                 text: '<'
                 font_size: dp(22)
                 bold: True
                 background_normal: ''
-                background_color: 0, 0, 0, 0
+                background_color: get_color_from_hex('#1B4D3E')
                 color: get_color_from_hex('#6BCB77')
                 on_release: root.go_back()
             Label:
@@ -1220,12 +1115,12 @@
                 size_hint_y: None
                 height: self.minimum_height
                 padding: [dp(14), dp(14)]
-                spacing: dp(12)
+                spacing: dp(10)
 
-                # Профиль
+                # Блок профиля
                 BoxLayout:
                     size_hint_y: None
-                    height: dp(100)
+                    height: dp(90)
                     spacing: dp(14)
                     padding: dp(14)
                     canvas.before:
@@ -1235,23 +1130,16 @@
                             size: self.size
                             pos: self.pos
                             radius: [dp(14)]
-                    BoxLayout:
+                    Button:
                         size_hint: None, None
-                        size: dp(56), dp(56)
+                        size: dp(52), dp(52)
                         pos_hint: {'center_y': 0.5}
-                        canvas.before:
-                            Color:
-                                rgba: get_color_from_hex('#6BCB77')
-                            Ellipse:
-                                size: dp(56), dp(56)
-                                pos: self.pos
-                        Label:
-                            text: 'Я'
-                            font_size: dp(24)
-                            bold: True
-                            color: get_color_from_hex('#FFFFFF')
-                            halign: 'center'
-                            valign: 'middle'
+                        background_normal: ''
+                        background_color: get_color_from_hex('#6BCB77')
+                        color: get_color_from_hex('#FFFFFF')
+                        font_size: dp(22)
+                        bold: True
+                        text: 'Я'
                     BoxLayout:
                         orientation: 'vertical'
                         spacing: dp(4)
@@ -1271,44 +1159,29 @@
                             text_size: self.size
                             valign: 'top'
 
-                # Войти / Регистрация (только для гостей)
+                # Войти / Регистрация
                 BoxLayout:
                     size_hint_y: None
-                    height: dp(54) if root.is_guest else dp(0)
+                    height: dp(50) if root.is_guest else dp(0)
                     spacing: dp(10)
                     opacity: 1 if root.is_guest else 0
                     Button:
                         text: 'Войти'
                         background_normal: ''
-                        background_color: 0, 0, 0, 0
+                        background_color: get_color_from_hex('#6BCB77')
                         color: get_color_from_hex('#FFFFFF')
                         font_size: dp(15)
                         bold: True
                         on_release: app.root.current = 'login'
-                        canvas.before:
-                            Color:
-                                rgba: get_color_from_hex('#6BCB77')
-                            RoundedRectangle:
-                                size: self.size
-                                pos: self.pos
-                                radius: [dp(12)]
                     Button:
                         text: 'Регистрация'
                         background_normal: ''
-                        background_color: 0, 0, 0, 0
+                        background_color: get_color_from_hex('#1B4D3E')
                         color: get_color_from_hex('#6BCB77')
                         font_size: dp(15)
                         bold: True
                         on_release: app.root.current = 'login'
-                        canvas.before:
-                            Color:
-                                rgba: get_color_from_hex('#1B4D3E')
-                            RoundedRectangle:
-                                size: self.size
-                                pos: self.pos
-                                radius: [dp(12)]
 
-                # БЕЗОПАСНОСТЬ
                 Label:
                     text: 'БЕЗОПАСНОСТЬ'
                     font_size: dp(11)
@@ -1321,7 +1194,7 @@
 
                 BoxLayout:
                     size_hint_y: None
-                    height: dp(52)
+                    height: dp(50)
                     padding: [dp(14), dp(8)]
                     canvas.before:
                         Color:
@@ -1338,25 +1211,18 @@
                         text_size: self.size
                     Button:
                         size_hint_x: None
-                        width: dp(84)
+                        width: dp(80)
                         text: 'Задать'
                         font_size: dp(12)
                         bold: True
                         background_normal: ''
-                        background_color: 0, 0, 0, 0
+                        background_color: get_color_from_hex('#1B4D3E')
                         color: get_color_from_hex('#6BCB77')
                         on_release: root.set_pin()
-                        canvas.before:
-                            Color:
-                                rgba: get_color_from_hex('#1B4D3E')
-                            RoundedRectangle:
-                                size: self.size
-                                pos: self.pos
-                                radius: [dp(10)]
 
                 BoxLayout:
                     size_hint_y: None
-                    height: dp(44)
+                    height: dp(40)
                     padding: [dp(14), dp(6)]
                     canvas.before:
                         Color:
@@ -1367,12 +1233,11 @@
                             radius: [dp(10)]
                     Label:
                         text: 'Ваши данные защищены. Личные данные никто не видит.'
-                        font_size: dp(12)
+                        font_size: dp(11)
                         color: get_color_from_hex('#A8C5DA')
                         halign: 'left'
                         text_size: self.size
 
-                # ОСНОВНОЕ
                 Label:
                     text: 'ОСНОВНОЕ'
                     font_size: dp(11)
@@ -1383,7 +1248,6 @@
                     size_hint_y: None
                     height: dp(22)
 
-                # Язык
                 BoxLayout:
                     size_hint_y: None
                     height: dp(50)
@@ -1409,7 +1273,6 @@
                         halign: 'right'
                         text_size: self.size
 
-                # Тёмная тема
                 BoxLayout:
                     size_hint_y: None
                     height: dp(50)
@@ -1433,7 +1296,6 @@
                         active: root.dark_mode
                         on_active: root.toggle_dark(self.active)
 
-                # Уведомления на экране
                 BoxLayout:
                     size_hint_y: None
                     height: dp(50)
@@ -1457,7 +1319,6 @@
                         active: root.notif_screen
                         on_active: root.toggle_notif_screen(self.active)
 
-                # Уведомления
                 BoxLayout:
                     size_hint_y: None
                     height: dp(50)
@@ -1481,7 +1342,6 @@
                         active: root.notif_enabled
                         on_active: root.toggle_notif(self.active)
 
-                # ДРУГОЕ
                 Label:
                     text: 'ДРУГОЕ'
                     font_size: dp(11)
@@ -1497,34 +1357,20 @@
                     size_hint_y: None
                     height: dp(50)
                     background_normal: ''
-                    background_color: 0, 0, 0, 0
+                    background_color: get_color_from_hex('#1E3A5F')
                     color: get_color_from_hex('#FFFFFF')
                     font_size: dp(14)
                     on_release: root.invite_friends()
-                    canvas.before:
-                        Color:
-                            rgba: get_color_from_hex('#1E3A5F')
-                        RoundedRectangle:
-                            size: self.size
-                            pos: self.pos
-                            radius: [dp(12)]
 
                 Button:
                     text: 'Удалить профиль'
                     size_hint_y: None
                     height: dp(50)
                     background_normal: ''
-                    background_color: 0, 0, 0, 0
+                    background_color: get_color_from_hex('#2A1010')
                     color: get_color_from_hex('#E74C3C')
                     font_size: dp(14)
                     on_release: root.delete_profile()
-                    canvas.before:
-                        Color:
-                            rgba: get_color_from_hex('#2A1010')
-                        RoundedRectangle:
-                            size: self.size
-                            pos: self.pos
-                            radius: [dp(12)]
 
                 Label:
                     text: 'Личные данные никто не видит.\nВы можете в любой момент удалить профиль.'
